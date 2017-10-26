@@ -10,8 +10,7 @@ class Product(models.Model):
     _inherit = 'product.product'
 
     @api.model
-    def _convert_to_foreign_currency(self, pricelist,
-                                     amount_dict, context=None):
+    def _convert_to_foreign_currency(self, pricelist, amount_dict):
         """
         Apply purchase pricelist
         """

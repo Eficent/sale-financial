@@ -7,12 +7,6 @@ from odoo import api, fields, models
 from odoo.addons import decimal_precision as dp
 
 
-def _prec(obj, mode=None):
-    # This function use orm cache it should be efficient
-    mode = mode or 'Sale Price'
-    return self.env['decimal.precision'].precision_get(mode)
-
-
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
@@ -45,7 +39,7 @@ class SaleOrder(models.Model):
     markup_rate = fields.Float(
             compute=_compute_markup_rate,
             string='Markup (%)',
-            digits=dp.get_precision('Sale Price'))
+            digits=dp.get_precision('Product Price'))
 
 
 class SaleOrderLine(models.Model):
@@ -53,19 +47,19 @@ class SaleOrderLine(models.Model):
 
     commercial_margin = fields.Float(
             'Margin',
-            digits=dp.get_precision('Sale Price'),
+            digits=dp.get_precision('Product Price'),
             help='Margin is [ sale_price - cost_price ], changing it will '
                  'update the discount', readonly=True, states={'draft': [(
                     'readonly', False)]})
     markup_rate = fields.Float(
             'Markup (%)',
-            digits=dp.get_precision('Sale Price'),
+            digits=dp.get_precision('Product Price'),
             help='Markup is [ margin / sale_price ], changing it will '
                  'update the discount', readonly=True, states={'draft': [(
                     'readonly', False)]})
     cost_price = fields.Float(
             'Cost Price',
-            digits=dp.get_precision('Sale Price'),
+            digits=dp.get_precision('Product Price'),
             help='The cost of the product. The product cost price at the '
                  'time of creating the sales order is proposed, '
                  'but can be changed by the user.', readonly=True,
@@ -88,14 +82,14 @@ class SaleOrderLine(models.Model):
         if self.product_id:
             sale_price = self.price_unit * (100 - self.discount) / 100.0
             markup_res = self.compute_markup(product_id,
-                                                    product_uom,
-                                                    pricelist,
-                                                    sale_price)[product_id]
+                                             product_uom,
+                                             pricelist,
+                                             sale_price)[product_id]
 
 
             self.commercial_margin = round(
-                markup_res['commercial_margin'], self._prec)
-            self.markup_rate = round(markup_res['markup_rate'], self._prec)
+                markup_res['commercial_margin'])
+            self.markup_rate = round(markup_res['markup_rate'])
 
     @api.multi
     @api.onchange('discount')
@@ -114,9 +108,8 @@ class SaleOrderLine(models.Model):
             markup_res = self.product_id.compute_markup(
                 pricelist, sale_price, cost_price)
 
-            self.commercial_margin = round(
-                markup_res['commercial_margin'], self._prec())
-            self.markup_rate = round(markup_res['markup_rate'], self._prec())
+            self.commercial_margin = markup_res['commercial_margin']
+            self.markup_rate = markup_res['markup_rate']
         return res
 
     @api.multi
@@ -137,12 +130,9 @@ class SaleOrderLine(models.Model):
             #sale_price = price_unit * (100 - discount) / 100.0
             markup_res = self.product_id.compute_markup()[product]
 
-            self.commercial_margin = round(
-                markup_res['commercial_margin'],  self._prec())
-            self.markup_rate = round(
-                int(markup_res['markup_rate'] * 100) / 100.0, self._prec())
-            self.bom_standard_cost = round(
-                markup_res['cost_price'],  self._prec())
+            self.commercial_margin = markup_res['commercial_margin']
+            self.markup_rate = int(markup_res['markup_rate'] * 100) / 100.0
+            self.bom_standard_cost = markup_res['cost_price']
 
     @api.multi
     @api.onchange('markup_rate')
@@ -150,11 +140,12 @@ class SaleOrderLine(models.Model):
         ''' If markup rate change compute the discount '''
         self.ensure_one()
         markup = markup / 100.0
-        if not price_unit or markup == 1: return {'value': {}}
-        discount = 1 + cost_price / (markup - 1) / price_unit
+        if not price_unit or markup == 1:
+            return False
+        discount = (1 + cost_price / (markup - 1) / price_unit)
         self.sale_price = price_unit * (1 - discount)
-        self.discount =  round(discount * 100, self._prec())
-        self.commercial_margin = round(sale_price - cost_price, self._prec())
+        self.discount = discount * 100
+        self.commercial_margin = sale_price - cost_price
 
     @api.multi
     @api.onchange('commercial_margin')
@@ -164,6 +155,5 @@ class SaleOrderLine(models.Model):
         if not self.price_unit: return False
         discount = 1 - ((cost_price + margin) / price_unit)
         sale_price = price_unit * (1 - discount)
-        self.discount = round(discount * 100, self._prec())
-        self.markup_rate = round(
-            margin / (sale_price or 1.0) * 100, self._prec())
+        self.discount = discount * 100
+        self.markup_rate = (margin / (sale_price or 1.0) * 100)
