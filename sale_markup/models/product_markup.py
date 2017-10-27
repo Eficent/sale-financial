@@ -6,6 +6,27 @@ from odoo import api, fields, models
 from odoo.addons import decimal_precision as dp
 
 
+class ProductProduct(models.Model):
+    _inherit = 'product.product'
+
+    commercial_margin = fields.Float(
+            related='product_tmpl_id.commercial_margin')
+    markup_rate = fields.Float(
+            related='product_tmpl_id.commercial_margin')
+
+    @api.multi
+    @api.depends('uom_id',
+                 'bom_standard_cost',
+                 'list_price', 'standard_price')
+    def _compute_markup_rate(self):
+        """
+        method for product function field on multi 'markup'
+        """
+        for pr in self:
+            pr.product_tmpl_id._compute_markup_rate()
+        return True
+
+
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
@@ -27,9 +48,6 @@ class ProductTemplate(models.Model):
         return (sale_price - purchase_price) / sale_price * 100
 
     @api.multi
-    @api.depends('uom_id',
-                 'bom_standard_cost',
-                 'list_price', 'standard_price')
     def _compute_markup_rate(self):
         """
         method for product function field on multi 'markup'

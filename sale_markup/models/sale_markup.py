@@ -64,11 +64,6 @@ class SaleOrderLine(models.Model):
                  'but can be changed by the user.', readonly=True,
                 states={'draft': [('readonly', False)]})
 
-    pricelist_id = fields.Many2one(related='order_id.pricelist_id',
-                                   string='Pricelist', readonly=True)
-    date_order = fields.Datetime(related='order_id.date_order',
-                                 string='Date', readonly=True)
-
     @api.multi
     @api.onchange('price_unit', 'product_id', 'order_id.discount',
                   'product_uom_qty', 'pricelist_id')
@@ -78,7 +73,7 @@ class SaleOrderLine(models.Model):
         '''
         self.ensure_one()
         if self.product_id:
-            self.prodcut_id.compute_markup_rate()
+            self.product_id._compute_markup_rate()
             self.commercial_margin = self.product_id.commercial_margin
             self.markup_rate = self.product_id.markup_rate
 
@@ -90,7 +85,7 @@ class SaleOrderLine(models.Model):
         '''
         self.ensure_one()
         if self.product_id:
-            self.product_id.compute_markup_rate()
+            self.product_id._compute_markup_rate()
             self.commercial_margin = self.product_id.commercial_margin
             self.markup_rate = self.product_id.markup_rate
 
@@ -104,7 +99,7 @@ class SaleOrderLine(models.Model):
                        - discount
         '''
         if self.product_id:
-            self.product_id.compute_markup_rate()
+            self.product_id._compute_markup_rate()
             self.commercial_margin = self.product_id.commercial_margin
             self.markup_rate = int(self.product_id.markup_rate * 100) / 100.0
             self.cost_price = self.product_id.bom_standard_cost
@@ -120,7 +115,7 @@ class SaleOrderLine(models.Model):
         discount = (1 + self.cost_price / (markup - 1) / self.price_unit)
         sale_price = self.price_unit * (1 - discount)
         self.discount = discount * 100
-        self.commercial_margin = sale_price - cost_price
+        self.commercial_margin = sale_price - self.cost_price
 
     @api.multi
     @api.onchange('commercial_margin')
@@ -132,4 +127,4 @@ class SaleOrderLine(models.Model):
         discount = 1 - ((self.cost_price + self.margin) / self.price_unit)
         sale_price = self.price_unit * (1 - discount)
         self.discount = discount * 100
-        self.markup_rate = (sefl.margin / (sale_price or 1.0) * 100)
+        self.markup_rate = (self.margin / (sale_price or 1.0) * 100)
