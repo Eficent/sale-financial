@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<openerp>
-   <data>
+<odoo>
       <record model="ir.ui.view" id="sale_markup_product_form">
          <field name="name">product.markup.view.form</field>
          <field name="model">product.product</field>
@@ -26,5 +25,4 @@
             </field>
          </field>
       </record>
-   </data>
-</openerp>
+</odoo>

@@ -1,153 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
-<openerp>
-  <data>
-
+<odoo>
     <!-- Sale order -->
-
     <!-- Add markup rate of the order in form view after Compute button -->
     <record model="ir.ui.view" id="sale_markup_sale_order_view">
-      <field name="name">sale.order.markup.view.form</field>
-      <field name="model">sale.order</field>
-      <field name="inherit_id" ref="sale.view_order_form" />
-      <field name="arch" type="xml">
-        <xpath expr="//group[@name='sale_total']" position="after">
-          <group class="oe_subtotal_footer oe_right" colspan="2" name="sale_markup"
-                 groups="sales_team.group_sale_manager  ">
-            <field name="markup_rate"
-                   groups="sales_team.group_sale_manager"/>
-          </group>
-        </xpath>
-      </field>
+        <field name="name">sale.order.markup.view.form</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='sale_total']" position="after">
+                <group name="sale_markup"
+                    groups="sales_team.group_sale_manager  ">
+                    <field name="markup_rate"/>
+                </group>
+            </xpath>
+        </field>
     </record>
 
     <!-- Add markup rate of the order in tree view after state field -->
     <record model="ir.ui.view" id="sale_markup_sale_order_tree">
-      <field name="name">sale.order.markup.view.tree</field>
-      <field name="model">sale.order</field>
-      <field name="inherit_id" ref="sale.view_order_tree" />
-      <field name="arch" type="xml">
-        <field name="state" position="after">
-          <field name="markup_rate"
-                 groups="sales_team.group_sale_manager"/>
+        <field name="name">sale.order.markup.view.tree</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree" />
+        <field name="arch" type="xml">
+            <field name="state" position="after">
+            <field name="markup_rate"
+                groups="sales_team.group_sale_manager"/>
+            </field>
         </field>
-      </field>
     </record>
 
     <record model="ir.ui.view" id="sale_markup_sale_order_line_tree">
-      <field name="name">sale.order.line.markup.view.tree</field>
-      <field name="model">sale.order.line</field>
-      <field name="inherit_id" ref="sale.view_order_line_tree" />
-      <field name="arch" type="xml">
-        <field name="price_subtotal" position="after">
-          <field name="commercial_margin"
+        <field name="name">sale.order.line.markup.view.tree</field>
+        <field name="model">sale.order.line</field>
+        <field name="inherit_id" ref="sale.view_order_line_tree" />
+        <field name="arch" type="xml">
+            <field name="price_subtotal" position="after">
+            <field name="commercial_margin"
                  groups="sales_team.group_sale_manager"/>
-          <field name="markup_rate"
+            <field name="markup_rate"
                  groups="sales_team.group_sale_manager"/>
         </field>
-      </field>
+        </field>
     </record>
 
 
     <!-- Add Markup in Sales Orders form's Sale order lines form -->
     <!-- Add onchanges on unit price and discount to update margin and markup -->
     <record model="ir.ui.view" id="sale_markup_sale_order_form_line_form">
-      <field name="name">sale.order.markup.view.form2</field>
-      <field name="model">sale.order</field>
-      <field name="inherit_id" ref="sale.view_order_form" />
-      <field name="arch" type="xml">
-        <xpath expr="//field[@name='order_line']/form//field[@name='product_id']"
-               position="attributes">
-          <attribute name="context_markup">{'discount': discount, 'price_unit': price_unit, 'markup_rate': markup_rate, 'commercial_margin': commercial_margin}</attribute>
-        </xpath>
-        <xpath expr="//field[@name='order_line']/form//field[@name='price_unit']"
-               position="attributes">
-          <attribute name="context_markup">{'price_unit': price_unit, 'product_id': product_id, 'discount': discount, 'product_uom': product_uom, 'pricelist': parent.pricelist_id, 'markup_rate': markup_rate, 'commercial_margin': commercial_margin, 'cost_price': cost_price}</attribute>
-        </xpath>
-        <xpath expr="//field[@name='order_line']/form//field[@name='discount']"
-               position="attributes">
-          <attribute name="context_markup">{'product_id': product_id, 'price_unit': price_unit, 'discount': discount, 'product_uom': product_uom, 'pricelist': parent.pricelist_id, 'markup_rate': markup_rate, 'commercial_margin': commercial_margin, 'break_onchange': break_onchange_discount, 'cost_price': cost_price}</attribute>
-        </xpath>
-        <xpath expr="//field[@name='order_line']/form//field[@name='name']"
-               position="before">
-          <group string="Markup" groups="sales_team.group_sale_manager  ">
-            <field name="commercial_margin"
-                   context="{'commercial_margin': commercial_margin, 'markup_rate': markup_rate, 'discount': discount, 'cost_price': cost_price, 'price_unit': price_unit}"
-                   on_change="onchange_commercial_margin(context)"
-                   groups="sales_team.group_sale_manager"/>
-            <field name="markup_rate"
-                   context="{'markup_rate': markup_rate, 'commercial_margin': commercial_margin, 'discount': discount, 'cost_price': cost_price, 'price_unit': price_unit}"
-                   on_change="onchange_markup_rate(context)"
-                   groups="sales_team.group_sale_manager"/>
-            <field name="cost_price"
-                   groups="sales_team.group_sale_manager  "
-                   context="{'price_unit': price_unit, 'product_id': product_id, 'discount': discount, 'product_uom': product_uom, 'pricelist': parent.pricelist_id, 'markup_rate': markup_rate, 'commercial_margin': commercial_margin, 'cost_price': cost_price}"
-                   on_change="onchange_cost_price(context)"
-                   />
-          </group>
-        </xpath>
-        <xpath expr="//field[@name='order_line']/form//field[@name='product_uom_qty']" position="attributes">
-          <attribute name="context_markup">{'discount': discount, 'price_unit': price_unit, 'markup_rate': markup_rate, 'commercial_margin': commercial_margin}</attribute>
-        </xpath>
-      </field>
+        <field name="name">sale.order.markup.view.form</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/form//field[@name='name']"
+                position="before">
+                    <group string="Markup" groups="sales_team.group_sale_manager  ">
+                        <field name="commercial_margin"
+                        context="{'commercial_margin': commercial_margin, 'markup_rate': markup_rate, 'discount': discount, 'cost_price': cost_price, 'price_unit': price_unit}"
+                        groups="sales_team.group_sale_manager"/>
+                        <field name="markup_rate"
+                        context="{'markup_rate': markup_rate, 'commercial_margin': commercial_margin, 'discount': discount, 'cost_price': cost_price, 'price_unit': price_unit}"
+                        groups="sales_team.group_sale_manager"/>
+                        <field name="cost_price"
+                        groups="sales_team.group_sale_manager"
+                        context="{'price_unit': price_unit, 'product_id': product_id, 'discount': discount, 'product_uom': product_uom, 'pricelist': parent.pricelist_id, 'markup_rate': markup_rate, 'commercial_margin': commercial_margin, 'cost_price': cost_price}"
+                        />
+                    </group>
+                </xpath>
+        </field>
     </record>
 
-     <record model="ir.ui.view" id="view_order_form">
-          <field name="name">sale.markup.view.order.form</field>
-          <field name="model">sale.order</field>
-          <field name="inherit_id" ref="sale.view_order_form"/>
-          <field name="arch" type="xml">
-              <xpath expr="//field[@name='order_line']/tree/field[@name='price_unit']" position="after">
-                  <group string="Markup" groups="sales_team.group_sale_manager  ">
-                      <field name="commercial_margin"
-                           context="{'commercial_margin': commercial_margin,
-                           'markup_rate': markup_rate, 'discount': discount,
-                           'cost_price': cost_price, 'price_unit': price_unit}"
-                           groups="sales_team.group_sale_manager"/>
-                      <field name="markup_rate"
-                           context="{'markup_rate': markup_rate, 'commercial_margin': commercial_margin,
-                           'discount': discount, 'cost_price': cost_price, 'price_unit': price_unit}"
-                           groups="sales_team.group_sale_manager"/>
-                      <field name="cost_price"
-                           groups="sales_team.group_sale_manager  "
-                           context="{'price_unit': price_unit, 'product_id': product_id,
-                           'discount': discount, 'product_uom': product_uom, 'pricelist': pricelist_id,
-                           'markup_rate': markup_rate, 'commercial_margin': commercial_margin, 'cost_price': cost_price}"/>
-                      <field name="pricelist_id" invisible="1"/>
-                      <field name="date_order" invisible="1"/>
-                  </group>
-              </xpath>
-          </field>
-      </record>
+    <record model="ir.ui.view" id="view_order_form">
+        <field name="name">sale.markup.view.order.form</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/tree/field[@name='currency_id']" position="after">
+                <field name="commercial_margin"
+                    groups="sales_team.group_sale_manager"/>
+                <field name="markup_rate"
+                    groups="sales_team.group_sale_manager"/>
+                <field name="cost_price"
+                    groups="sales_team.group_sale_manager"/>
+                <field name="pricelist_id" invisible="1"/>
+                <field name="date_order" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
 
-    <!-- Add Markup in Sales Orders form's Sale order lines tree -->
+     <!--Add Markup in Sales Orders form's Sale order lines tree-->
     <record model="ir.ui.view" id="sale_markup_sale_order_form_line_tree">
-      <field name="name">sale.order.markup.view.form</field>
-      <field name="model">sale.order</field>
-      <field name="inherit_id" ref="sale.view_order_form" />
-      <field name="arch" type="xml">
-          <xpath
-                  expr="//field[@name='order_line']/tree//field[@name='price_unit']"
-                 position="after">
-              <field name="commercial_margin"
-                     context="{'commercial_margin': commercial_margin, 'markup_rate': markup_rate, 'discount': discount, 'cost_price': cost_price, 'price_unit': price_unit, 'break_onchange': break_onchange_commercial_margin}"
-                     on_change="onchange_commercial_margin(context)"
-                     groups="sales_team.group_sale_manager"/>
-              <field name="markup_rate"
-                     context="{'markup_rate': markup_rate, 'commercial_margin': commercial_margin, 'discount': discount, 'cost_price': cost_price, 'price_unit': price_unit, 'break_onchange': break_onchange_markup_rate}"
-                     on_change="onchange_markup_rate(context)"
-                     groups="sales_team.group_sale_manager"/>
-              <field name="cost_price"
-                     groups="sales_team.group_sale_manager  "
-                     context="{'price_unit': price_unit, 'product_id': product_id, 'discount': discount, 'product_uom': product_uom, 'pricelist': parent.pricelist_id, 'markup_rate': markup_rate, 'commercial_margin': commercial_margin, 'cost_price': cost_price}"
-                     on_change="onchange_cost_price(context)"
-                     />
-          </xpath>
-          <xpath
-                  expr="//field[@name='order_line']/tree//field[@name='product_uom_qty']" position="attributes">
-            <attribute name="context_markup">{'discount': discount, 'price_unit': price_unit, 'markup_rate': markup_rate, 'commercial_margin': commercial_margin}</attribute>
-          </xpath>
-
-      </field>
+        <field name="name">sale.order.markup.view.form</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/tree//field[@name='price_unit']"
+                position="after">
+            <field name="commercial_margin"
+                context="{'commercial_margin': commercial_margin, 'markup_rate': markup_rate,
+                'discount': discount, 'cost_price': cost_price, 'price_unit': price_unit}"
+            groups="sales_team.group_sale_manager"/>
+            <field name="markup_rate"
+                context="{'markup_rate': markup_rate, 'commercial_margin': commercial_margin,
+                'discount': discount, 'cost_price': cost_price, 'price_unit': price_unit}"
+                groups="sales_team.group_sale_manager"/>
+            <field name="cost_price"
+                groups="sales_team.group_sale_manager"
+                context="{'price_unit': price_unit, 'product_id': product_id, 'discount': discount,
+                    'product_uom': product_uom, 'pricelist': parent.pricelist_id, 'markup_rate': markup_rate,
+                    'commercial_margin': commercial_margin, 'cost_price': cost_price}"/>
+            </xpath>
+        </field>
     </record>
-  </data>
-</openerp>
+
+</odoo>

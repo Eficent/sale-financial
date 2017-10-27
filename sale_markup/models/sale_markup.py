@@ -64,7 +64,6 @@ class SaleOrderLine(models.Model):
                  'time of creating the sales order is proposed, '
                  'but can be changed by the user.', readonly=True,
                 states={'draft': [('readonly', False)]})
-        # boolean fields to skip onchange loop
 
     pricelist_id = fields.Many2one(related='order_id.pricelist_id',
                                    string='Pricelist', readonly=True)
