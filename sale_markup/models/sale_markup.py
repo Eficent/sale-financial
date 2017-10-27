@@ -35,7 +35,6 @@ class SaleOrder(models.Model):
             result.add(line.order_id.id)
         return list(result)
 
-
     markup_rate = fields.Float(
             compute=_compute_markup_rate,
             string='Markup (%)',
@@ -79,16 +78,9 @@ class SaleOrderLine(models.Model):
         '''
         self.ensure_one()
         if self.product_id:
-            sale_price = self.price_unit * (100 - self.discount) / 100.0
-            markup_res = self.compute_markup(product_id,
-                                             product_uom,
-                                             pricelist,
-                                             sale_price)[product_id]
-
-
-            self.commercial_margin = round(
-                markup_res['commercial_margin'])
-            self.markup_rate = round(markup_res['markup_rate'])
+            self.prodcut_id.compute_markup_rate()
+            self.commercial_margin = self.product_id.commercial_margin
+            self.markup_rate = self.product_id.markup_rate
 
     @api.multi
     @api.onchange('discount')
@@ -97,19 +89,10 @@ class SaleOrderLine(models.Model):
         If discount change, compute the new markup rate
         '''
         self.ensure_one()
-        if product_id:
-            product_obj = self.env['product.product']
-            if res['value'].has_key('price_unit'):
-                price_unit = res['value']['price_unit']
-            if res['value'].has_key('discount'):
-                discount = res['value']['discount']
-            sale_price = price_unit * (100 - discount) / 100.0
-            markup_res = self.product_id.compute_markup(
-                pricelist, sale_price, cost_price)
-
-            self.commercial_margin = markup_res['commercial_margin']
-            self.markup_rate = markup_res['markup_rate']
-        return res
+        if self.product_id:
+            self.product_id.compute_markup_rate()
+            self.commercial_margin = self.product_id.commercial_margin
+            self.markup_rate = self.product_id.markup_rate
 
     @api.multi
     @api.onchange('product_id')
@@ -120,29 +103,22 @@ class SaleOrderLine(models.Model):
         Added params : - price_unit,
                        - discount
         '''
-        discount = discount or 0.0
-        price_unit = price_unit or 0.0
-
         if self.product_id:
-            if res['value'].has_key('price_unit'):
-                price_unit = res['value']['price_unit']
-            #sale_price = price_unit * (100 - discount) / 100.0
-            markup_res = self.product_id.compute_markup()[product]
-
-            self.commercial_margin = markup_res['commercial_margin']
-            self.markup_rate = int(markup_res['markup_rate'] * 100) / 100.0
-            self.bom_standard_cost = markup_res['cost_price']
+            self.product_id.compute_markup_rate()
+            self.commercial_margin = self.product_id.commercial_margin
+            self.markup_rate = int(self.product_id.markup_rate * 100) / 100.0
+            self.cost_price = self.product_id.bom_standard_cost
 
     @api.multi
     @api.onchange('markup_rate')
     def onchange_markup_rate(self):
         ''' If markup rate change compute the discount '''
         self.ensure_one()
-        markup = markup / 100.0
-        if not price_unit or markup == 1:
+        markup = self.markup_rate / 100.0
+        if not self.price_unit or markup == 1:
             return False
-        discount = (1 + cost_price / (markup - 1) / price_unit)
-        self.sale_price = price_unit * (1 - discount)
+        discount = (1 + self.cost_price / (markup - 1) / self.price_unit)
+        sale_price = self.price_unit * (1 - discount)
         self.discount = discount * 100
         self.commercial_margin = sale_price - cost_price
 
@@ -151,8 +127,9 @@ class SaleOrderLine(models.Model):
     def onchange_commercial_margin(self):
         ''' If markup rate change compute the discount '''
         self.ensure_one()
-        if not self.price_unit: return False
-        discount = 1 - ((cost_price + margin) / price_unit)
-        sale_price = price_unit * (1 - discount)
+        if not self.price_unit:
+            return False
+        discount = 1 - ((self.cost_price + self.margin) / self.price_unit)
+        sale_price = self.price_unit * (1 - discount)
         self.discount = discount * 100
-        self.markup_rate = (margin / (sale_price or 1.0) * 100)
+        self.markup_rate = (sefl.margin / (sale_price or 1.0) * 100)
